@@ -9,11 +9,6 @@ const LogSchema = new Schema(
         workspaceId:{type:Number,default:1},
         contractId:{ type: Schema.Types.ObjectId, ref: 'Pdf', required: true },
         counterpartiesId:{ type: Schema.Types.ObjectId, ref: 'counterparties', required: true },
-        status:{
-            type: String,
-            enum: ['Draft','Redlining','Signing','Executed','On Hold','Voided'],  
-            required: true
-        },
         organization_entity:{type:String,required:true},
         contract_type:{type:String,required:true}
     },

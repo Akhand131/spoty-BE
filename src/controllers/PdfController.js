@@ -4,7 +4,6 @@ const path = require('path');
 const { ApiResponse, HttpStatus } = require('../constants/constants');
 const Pdf = require('../models/PdfModel');
 const { uploadOnCloudinary } = require('../utils/cloudinary');
-const { nanoid } = require('nanoid');
 const pdfParse = require('pdf-parse');
 const { upload } = require('../middleware/multerMiddleware');
 const Tesseract = require('tesseract.js');
@@ -93,20 +92,21 @@ class PdfController {
                 contract_type: contract_type,
                 organization_entity: organization_entity,
                 extractionId: extraction._id,
+                status: "Draft",
 
             });
             for (const refId of parsedcounterparty_name) {
                 await LogModel.create({
                     createdBy: req.user._id,
                     contractId: newPdf._id,
-                    counterpartiesId:refId,
+                    counterpartiesId: refId,
                     status: "Draft",
                     organization_entity: organization_entity,
                     contract_type: contract_type
                 })
             }
 
-            
+
             console.log("ak5");
 
             return res.status(HttpStatus.CREATED).json({
