@@ -19,8 +19,8 @@ class UserController {
 
   register = async (req, res) => {
     try {
-      const { name, email, password } = req.body;
-      const response = await this.userService.registerUser(name, email, password);
+      const { name, email, password,mobileno } = req.body;
+      const response = await this.userService.registerUser(name, email, password,mobileno);
       return res.status(response.responseCode ?? HttpStatus.OK).json(response);
     } catch (error) {
       console.error("Error in registering user", error);

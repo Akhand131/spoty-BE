@@ -8,10 +8,10 @@ const { UserModel } = require('../models/UserModel');
 
 
 class UserService {
-  async registerUser(name, email, password) {
+  async registerUser(name, email, password,mobileno) {
     const apiResponseDto = new ApiResponseDto();
     try {
-      if (!name || !email || !password) {
+      if (!name || !email || !password ||!mobileno) {
         apiResponseDto.status = ApiResponse.ERROR;
         apiResponseDto.message = "Please Enter required informations";
         apiResponseDto.responseCode = HttpStatus.BAD_REQUEST;
@@ -25,7 +25,7 @@ class UserService {
         return apiResponseDto;
       }
       const hashedPassword = await bcrypt.hash(password, 10);
-      const newUser = new UserModel({ name, email, password: hashedPassword });
+      const newUser = new UserModel({ name, email, password: hashedPassword,mobileno:mobileno });
       await newUser.save();
       const token = jwt.sign({ id: newUser._id }, process.env.JWT_SECRET, { expiresIn: '7d' });
 
