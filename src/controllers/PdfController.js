@@ -4,7 +4,6 @@ const path = require('path');
 const { ApiResponse, HttpStatus } = require('../constants/constants');
 const Pdf = require('../models/PdfModel');
 const { uploadOnCloudinary } = require('../utils/cloudinary');
-const { nanoid } = require('nanoid');
 const pdfParse = require('pdf-parse');
 const { upload } = require('../middleware/multerMiddleware');
 const Tesseract = require('tesseract.js');

@@ -10,8 +10,9 @@ if (!mongoUri) {
 
 const connectToDatabase = async () => {
     try {
-        await mongoose.connect(mongoUri);
-        console.log('MongoDB connected with connection pooling');
+        await mongoose.connect(mongoUri)
+        .then(() => console.log('Connected to MongoDB'))
+        .catch((error) => console.error('Error connecting to MongoDB:', error));
     } catch (err) {
         console.error('Database connection error:', err);
     }
