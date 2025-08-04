@@ -13,6 +13,7 @@ const PdfExtraction = require('../models/PdfExtraction');
 const mammoth = require('mammoth');
 const { default: mongoose } = require('mongoose');
 const LogModel = require('../models/LogModel');
+const { metaDataExtractionFlow } = require('../spoty/genai/flows/metaData-Extraction');
 
 class PdfController {
     constructor() {
@@ -38,6 +39,7 @@ class PdfController {
                 return res.status(400).json({ message: 'Invalid ObjectId in counterparty_name array' });
             }
 
+            const db = mongoose.connection;
 
             const file = req.file;
             if (!file) {
@@ -77,6 +79,9 @@ class PdfController {
             console.log("ak3");
 
 
+            const metaDataAIResponse = await metaDataExtractionFlow({contractData:JSON.stringify(extractedJson)});
+
+            const metaData = await db.collection('metaData').insertOne(metaDataAIResponse);
 
             // Save Extraction Data
             const extraction = await PdfExtraction.create({
@@ -92,7 +97,7 @@ class PdfController {
                 contract_type: contract_type,
                 organization_entity: organization_entity,
                 extractionId: extraction._id,
-
+                metaDataId: metaData.insertedId,
             });
             for (const refId of parsedcounterparty_name) {
                 await LogModel.create({

@@ -152,19 +152,18 @@ class WhatsAppService {
     }
 
     _handleKeywordBasedResponse(message) {
-        if (message.includes('hello') || message.includes('hi')) {
+        if (message.toLowerCase().includes('hello') || message.toLowerCase().includes('hi')) {
           return "Hello! Welcome to SpotDraft’s contract assistant. How can I help you with your legal contracts today?";
         } else if (lowerMessage.includes('draft') || lowerMessage.includes('create')) {
           return 'To draft a new legal contract, please share the contract type and any key details. I’ll guide you through the process.';
         } else if (lowerMessage.includes('review')) {
           return 'To review a contract, please upload the document or paste the text here. I’ll help you analyze it.';
-         }
-         else if (lowerMessage.includes('help')) {
+        } else if (lowerMessage.includes('help')) {
           return 'Available commands:\n- "draft" or "create" - Start a new contract draft\n- "review" - Get help analyzing a contract\n- "clauses" - View standard clause templates\n- "help" - Show this menu';
-      } else if (message.includes('tournaments')) {
-          return 'Upcoming tournaments:\n1. Summer Championship - Oct 15, 2024\n2. Winter Cup - Dec 20, 2024';
+        } else if (lowerMessage.includes('clauses') || lowerMessage.includes('templates')) {
+          return 'Popular clause templates:\n1. Confidentiality Clause\n2. Termination Clause\n3. Payment Terms\n4. Governing Law\nLet me know if you’d like to insert or modify one.';
         } else {
-          return 'Thank you for your message! For assistance, reply with "help" to see available options.';
+            return 'Thanks for your message! Reply with "help" to see what I can do with legal contracts.';
         }
     }
 
