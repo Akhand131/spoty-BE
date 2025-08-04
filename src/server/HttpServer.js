@@ -8,6 +8,7 @@ const { PdfController } = require('../controllers/PdfController');
 const { UserController } = require('../controllers/UserController');
 const { CounterpartiesController } = require('../controllers/CounterpartyController');
 const { WaSpotyController } = require('../spoty/wa-bot');
+const { LogController } = require('../controllers/LogController');
 
 class HttpServer {
   constructor(port) {
@@ -45,11 +46,13 @@ class HttpServer {
     const userController =new UserController();
     const counterpartyController=new CounterpartiesController();
     const waSpotyController = new WaSpotyController();
+    const logController = new LogController();
 
     this.app.use("/user",userController.router);
     this.app.use("/contracts", pdfController.router);
     this.app.use("/counterparties", counterpartyController.router);
     this.app.use('/api', waSpotyController.router);
+    this.app.use("/logs",logController.router);
   }
 
   start() {

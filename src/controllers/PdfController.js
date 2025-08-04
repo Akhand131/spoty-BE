@@ -98,19 +98,20 @@ class PdfController {
                 organization_entity: organization_entity,
                 extractionId: extraction._id,
                 metaDataId: metaData.insertedId,
+                status: "Draft",
             });
             for (const refId of parsedcounterparty_name) {
                 await LogModel.create({
                     createdBy: req.user._id,
                     contractId: newPdf._id,
-                    counterpartiesId:refId,
+                    counterpartiesId: refId,
                     status: "Draft",
                     organization_entity: organization_entity,
                     contract_type: contract_type
                 })
             }
 
-            
+
             console.log("ak5");
 
             return res.status(HttpStatus.CREATED).json({
