@@ -21,6 +21,7 @@ const pdfSchema = new Schema(
         contract_type: { type: String,required:true },
         organization_entity:{type:String,required:true},
         extractionId: { type: Schema.Types.ObjectId, ref: 'PdfExtraction' },
+        metaDataId: { type: Schema.Types.ObjectId, ref: 'MetaData' },
         status:{
             type: String,
             enum: ['Draft','Redlining','Signing','Executed','On Hold','Voided'],  

@@ -7,6 +7,7 @@ const connectToDatabase = require('../config/db');
 const { PdfController } = require('../controllers/PdfController');
 const { UserController } = require('../controllers/UserController');
 const { CounterpartiesController } = require('../controllers/CounterpartyController');
+const { WaSpotyController } = require('../spoty/wa-bot');
 const { LogController } = require('../controllers/LogController');
 
 class HttpServer {
@@ -22,7 +23,6 @@ class HttpServer {
   async connectToDatabase() {
     try {
       await connectToDatabase();
-      console.log("Database connected successfully.");
     } catch (error) {
       console.error("Failed to connect to the database:", error);
     }
@@ -45,11 +45,13 @@ class HttpServer {
     const pdfController = new PdfController();
     const userController =new UserController();
     const counterpartyController=new CounterpartiesController();
+    const waSpotyController = new WaSpotyController();
     const logController = new LogController();
 
     this.app.use("/user",userController.router);
     this.app.use("/contracts", pdfController.router);
     this.app.use("/counterparties", counterpartyController.router);
+    this.app.use('/api', waSpotyController.router);
     this.app.use("/logs",logController.router);
   }
 
