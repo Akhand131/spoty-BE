@@ -3,6 +3,7 @@ const {
   ContractQAInputSchema,
   ContractQAOutputSchema
 } = require('../schema/contract');
+const { contractContextManager } = require('../../service/ContractContextManager.js');
 
 
 const contractQAFlow = ai.defineFlow(
@@ -12,9 +13,20 @@ const contractQAFlow = ai.defineFlow(
     outputSchema: ContractQAOutputSchema,
   },
   async (input) => {
-    const prompt = `You are a legal assistant. Answer briefly and concisely.
+    let contractData = input.contractData;
     
-    Contract: ${JSON.stringify(input.contractData, null, 2)}
+    if (!contractData) {
+      contractData = contractContextManager.getContractContext();
+      
+      if (!contractData) {
+        throw new Error('No contract data provided and no stored context found. Please provide contract data or set up context first.');
+      }
+    }
+
+    const prompt = `You are a legal assistant. Answer briefly and concisely.
+    your name is Dr. LexAi. don't answer anything out of the contract 
+    
+    Contract: ${JSON.stringify(contractData, null, 2)}
     
     Question: ${input.userQuestion}
     
@@ -22,7 +34,9 @@ const contractQAFlow = ai.defineFlow(
     - Give short, direct answers (max 200 words)
     - Mention clearly if info is missing
     - Format the output clearly and neatly, so it's easy to understand at first glance
-    - Phrase each line professionally and concisely.`;
+    - Phrase each line professionally and concisely.;
+    - if these type of questions asked "How does this quarter's cycle time compare to last quarter?"  assume some similar type of data 
+    `
 
     const { output } = await ai.generate({
       prompt,
@@ -35,7 +49,28 @@ const contractQAFlow = ai.defineFlow(
   }
 )
 
+// Helper functions for contract context management
+const setContractContext = (contractData) => {
+  contractContextManager.setContractContext(contractData);
+};
+
+const clearContractContext = () => {
+  contractContextManager.clearContext();
+};
+
+const getContractContext = () => {
+  return contractContextManager.getContractContext();
+};
+
+const hasContractContext = () => {
+  return contractContextManager.hasContext();
+};
+
 module.exports = {
-  contractQAFlow
+  contractQAFlow,
+  setContractContext,
+  clearContractContext,
+  getContractContext,
+  hasContractContext
 };
 

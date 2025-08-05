@@ -134,7 +134,8 @@ class PdfController {
                 if (!mongoose.Types.ObjectId.isValid(id)) {
                     return res.status(400).json({ message: "Invalid PDF ID" });
                 }
-                const pdf = await Pdf.findById(id).populate('extractionId');
+                const pdf = await Pdf.findById(id).populate('extractionId').select('-__v');
+                
                 if (!pdf) {
                     return res.status(404).json({ message: "PDF not found" });
                 }

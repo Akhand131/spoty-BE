@@ -3,13 +3,20 @@ const http = require('http');
 const path = require('path');
 const cors = require('cors');
 const connectToDatabase = require('../config/db');
+const GeminiContractBot  = require('../spoty/toolManager/contractBot');
 
 const { PdfController } = require('../controllers/PdfController');
 const { UserController } = require('../controllers/UserController');
 const { CounterpartiesController } = require('../controllers/CounterpartyController');
 const { WaSpotyController } = require('../spoty/wa-bot');
 const { LogController } = require('../controllers/LogController');
+<<<<<<< HEAD
+const { initializeContractContext } = require('../spoty/service/initializeContractContext.js');
+const contractBotRouter = require('../spoty/toolManager/router');
+const { getContractData } = require('../spoty/service/ContractData.js');
+=======
 const { InfoController } = require('../controllers/InfoController');
+>>>>>>> main
 
 class HttpServer {
   constructor(port) {
@@ -55,12 +62,18 @@ class HttpServer {
     this.app.use("/counterparties", counterpartyController.router);
     this.app.use('/api', waSpotyController.router);
     this.app.use("/logs",logController.router);
+    this.app.use('/chat', contractBotRouter)
+    
     this.app.use("/info",infoController.router);
   }
 
   start() {
     this.server.listen(this.port, () => {
       console.log(`Server is running on http://localhost:${this.port}`);
+      
+      // Initialize contract context with default data
+      initializeContractContext();
+
     });
   }
 }
