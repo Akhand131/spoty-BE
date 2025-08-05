@@ -16,10 +16,49 @@ class LogController {
   }
 
   configureRoutes() {
+    this.router.get('/',this.getLogs.bind(this));
+    this.router.get('/:contractId',this.getLogs.bind(this));
     this.router.post('/create', this.createLogs);
     this.router.post('/update',this.updateLogs);
     
+    
   }
+
+  getLogs = async (req, res) => {
+    try {
+        const { contractId } = req.params;
+        let logs = [];
+
+        if (contractId) {
+            if (!mongoose.Types.ObjectId.isValid(contractId)) {
+                return res.status(400).json({ message: "Invalid Contract ID" });
+            }
+
+            logs = await LogModel.find({ contractId: contractId });
+
+            if (logs.length === 0) {
+                return res.status(404).json({ message: "No Logs found for this contract" });
+            }
+        } else {
+            logs = await LogModel.find();
+
+            if (logs.length === 0) {
+                return res.status(404).json({ message: "No Logs found" });
+            }
+        }
+
+        return res.status(200).json({
+            status: "SUCCESS",
+            message: contractId ? "Contract Logs fetched successfully" : "All logs fetched successfully",
+            data: logs
+        });
+
+    } catch (error) {
+        console.error("Error in fetching log", error);
+        res.status(500).json({ message: "Failed to get Logs!" });
+    }
+};
+
 
   createLogs = async (req, res) => {
     try {
@@ -59,10 +98,6 @@ class LogController {
      
         const { contractId,status, cp_id, message } = req.body;
 
-        // const logs = await LogModel.findOne({ contractId: contractId });
-        // if (!logs) {
-        //     return res.status(404).json({ message: 'No Logs found' });
-        // }
        let msg=[];
 
         if(message && !cp_id){
