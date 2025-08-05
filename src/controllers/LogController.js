@@ -124,7 +124,7 @@ class LogController {
         }
 
         // Push cp_id to counterparty_signature if valid
-        if (cp_id && contract.counterparty_name.includes(cp_id)) {
+        if (status&&cp_id && contract.counterparty_name.includes(cp_id)&&status==='Signed') {
             const cp=await CounterpartiesModel.findById(cp_id);
             if (!contract.counterparty_signature.includes(cp_id)) {
                 contract.counterparty_signature.push(cp_id);
