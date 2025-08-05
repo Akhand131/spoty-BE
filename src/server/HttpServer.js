@@ -10,9 +10,13 @@ const { UserController } = require('../controllers/UserController');
 const { CounterpartiesController } = require('../controllers/CounterpartyController');
 const { WaSpotyController } = require('../spoty/wa-bot');
 const { LogController } = require('../controllers/LogController');
+<<<<<<< HEAD
 const { initializeContractContext } = require('../spoty/service/initializeContractContext.js');
 const contractBotRouter = require('../spoty/toolManager/router');
 const { getContractData } = require('../spoty/service/ContractData.js');
+=======
+const { InfoController } = require('../controllers/InfoController');
+>>>>>>> main
 
 class HttpServer {
   constructor(port) {
@@ -51,6 +55,7 @@ class HttpServer {
     const counterpartyController=new CounterpartiesController();
     const waSpotyController = new WaSpotyController();
     const logController = new LogController();
+    const infoController=new InfoController();
 
     this.app.use("/user",userController.router);
     this.app.use("/contracts", pdfController.router);
@@ -59,6 +64,7 @@ class HttpServer {
     this.app.use("/logs",logController.router);
     this.app.use('/chat', contractBotRouter)
     
+    this.app.use("/info",infoController.router);
   }
 
   start() {

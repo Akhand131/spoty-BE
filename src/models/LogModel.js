@@ -8,8 +8,14 @@ const LogSchema = new Schema(
         createdBy:{type:Schema.Types.ObjectId,ref:'User',required:true},
         workspaceId:{type:Number,default:1},
         contractId:{ type: Schema.Types.ObjectId, ref: 'Pdf', required: true },
-        counterpartiesId:{ type: Schema.Types.ObjectId, ref: 'counterparties', required: true },
+        counterpartiesId:{ type: Schema.Types.ObjectId, ref: 'counterparties' },
         organization_entity:{type:String,required:true},
+        message:{type:String,default:""},
+        status:{
+            type: String,
+            enum: ['Draft','Redlining','Signing','Executed','On Hold','Archived'],  
+            required: true
+        },
         contract_type:{type:String,required:true}
     },
     { timestamps: true }

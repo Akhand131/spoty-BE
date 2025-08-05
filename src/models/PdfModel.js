@@ -5,7 +5,7 @@ const { Schema } = mongoose;
 
 const logSchema = new Schema({
     message: { type: String, required: true },
-    createdBy: { type: String, required:true },
+    createdBy: { type: String},
     createdAt: { type: Date, default: Date.now }
 });
 
@@ -24,7 +24,7 @@ const pdfSchema = new Schema(
         metaDataId: { type: Schema.Types.ObjectId, ref: 'MetaData' },
         status:{
             type: String,
-            enum: ['Draft','Redlining','Signing','Executed','On Hold','Voided'],  
+            enum: ['Draft','Redlining','Signing','Executed','On Hold','Archived'],  
             required: true
         },
         logs:[logSchema],
