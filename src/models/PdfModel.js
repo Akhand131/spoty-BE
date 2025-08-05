@@ -24,7 +24,7 @@ const pdfSchema = new Schema(
         metaDataId: { type: Schema.Types.ObjectId, ref: 'MetaData' },
         status:{
             type: String,
-            enum: ['Draft','Redlining','Signing','Executed','On Hold','Voided'],  
+            enum: ['Draft','Redlining','Signing','Executed','On Hold','Archived'],  
             required: true
         },
         logs:[logSchema],
