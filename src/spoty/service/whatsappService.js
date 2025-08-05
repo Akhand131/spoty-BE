@@ -3,9 +3,8 @@ const dotenv = require('dotenv');
 const {contractQAFlow} = require('../genai/flows/contract');
 const {transcribeAudio} = require('../utils/transcribeAudio');
 const generateAudioResponse = require('../utils/generateAudioResponse');
-
+const { contractDataStored } = require('./ContractData');
 dotenv.config();
-
 
 const {
     TWILIO_ACCOUNT_SID,
@@ -22,8 +21,38 @@ class WhatsAppService {
         this.authToken = TWILIO_AUTH_TOKEN;
         this.fromNumber = TWILIO_WHATSAPP_NUMBER; 
         this.client = twilio(this.accountSid, this.authToken);
+        this.contractData = contractDataStored;
         this.textResponseInCaseOfAudio = "Sorry, I could not process your audio message. Please try sending a text message.";
     }
+
+    async processQuery(userQuery, contractContext = {}) {
+        try {
+          console.log('Processing contract query:', userQuery);
+    
+          const qaResult = await contractQAFlow({
+            // contractData: contractData,
+            userQuestion: userQuery
+        });
+        let responseMessage = '';
+    
+        responseMessage = qaResult.answer;
+            
+        if (responseMessage.length > 1400) {
+            responseMessage = responseMessage.substring(0, 1400) + '...';
+        }
+
+        return { success: true, answer: responseMessage };
+    
+        } catch (error) {
+          console.error('Error processing contract query:', error);
+          return {
+            query: userQuery,
+            error: 'Internal server error',
+            requiresTools: false
+          };
+        }
+    }
+
 
     async sendRegistrationConfirmation(playerPhoneNumber, playerName, tournamentDetails) {
         try {
@@ -51,32 +80,60 @@ class WhatsAppService {
             console.log('from', from);
             let messageBody = body.toLowerCase().trim();
 
-            // Handle audio message
-            if (mediaUrl) {
-                const audioResult = await this._handleAudioMessage(mediaUrl, from);
-                if (!audioResult.success) return audioResult;
-                messageBody = audioResult.transcribedText;
-                console.log('messageBody', messageBody);
-                this.textResponseInCaseOfAudio =  messageBody;
+            let responseMessage = '';
+
+            if(messageBody.length<1){
+                responseMessage =  "Hello! Welcome to SpotDraft’s contract assistant. How can I help you with your legal contracts today?" 
+            }
+            if(messageBody.includes('hello') || messageBody.includes('hi')){
+                responseMessage =  "Hello! Welcome to SpotDraft’s contract assistant. How can I help you with your legal contracts today?"
             }
 
-            let responseMessage = '';
-            if (this._isContractRelatedQuestion(messageBody)) {
-
-                const contractData = this._getDefaultContractData();
-                const qaResult = await contractQAFlow({
-                    contractData: contractData,
-                    userQuestion: messageBody
-                });
-    
-                responseMessage = qaResult.answer;
+            await this.client.messages.create({
+                body: 'Thinking... 🤔',
+                from: this.fromNumber,
+                to: from
+            });
             
-                // Truncate if too long(WhapsApp limit 1600 characters)
-                if (responseMessage.length > 1400) {
-                    responseMessage = responseMessage.substring(0, 1400) + '...';
-                }
-            } else {
-                responseMessage = this._handleKeywordBasedResponse(messageBody);
+            // Handle audio message
+            // if (mediaUrl) {
+            //     const audioResult = await this._handleAudioMessage(mediaUrl, from);
+            //     if (!audioResult.success) return audioResult;
+            //     messageBody = audioResult.transcribedText;
+            //     console.log('messageBody', messageBody);
+            //     this.textResponseInCaseOfAudio =  messageBody;
+            // }
+
+        
+            // if (this._isContractRelatedQuestion(messageBody)) {
+
+            //     const contractData = this._getDefaultContractData();
+            //     const qaResult = await contractQAFlow({
+            //         // contractData: contractData,
+            //         userQuestion: messageBody
+            //     });
+    
+            //     responseMessage = qaResult.answer;
+            
+            //     // Truncate if too long(WhapsApp limit 1600 characters)
+            //     if (responseMessage.length > 1400) {
+            //         responseMessage = responseMessage.substring(0, 1400) + '...';
+            //     }
+            // } else {
+            //     responseMessage = this._handleKeywordBasedResponse(messageBody);
+            // }
+
+            const qaResult = await contractQAFlow({
+                // contractData: contractData,
+                userQuestion: messageBody
+            });
+
+
+            responseMessage = qaResult.answer;
+        
+            // Truncate if too long(WhapsApp limit 1600 characters)
+            if (responseMessage.length > 1400) {
+                responseMessage = responseMessage.substring(0, 1400) + '...';
             }
 
             // if (isAudioMessage) {
@@ -126,47 +183,28 @@ class WhatsAppService {
     }
 
     _getDefaultContractData() {
-        return {
-            contractType: 'Non-Disclosure Agreement (NDA)',
-            parties: ['Spotdraft Technologies Pvt. Ltd.', 'Ankush Mehra'],
-            jurisdiction: 'Bengaluru, Karnataka, India',
-            effectiveDate: '2024-01-15',
-            termDuration: '3 years',
-            specialTerms: [
-              'The NDA is effective for a period of 3 years from the effective date.',
-              'All proprietary information disclosed during discussions shall remain confidential.',
-              'Confidential information includes but is not limited to product designs, source code, business plans, customer data, and pricing strategies.',
-              'No party shall disclose the information to third parties without written consent.',
-              'The obligation to maintain confidentiality survives the termination of this agreement.',
-              'Either party may terminate this agreement with 15 days written notice.',
-              'The recipient party must return or destroy all confidential materials upon termination.',
-              'Any disputes shall be resolved under the Arbitration and Conciliation Act, 1996.',
-              'Upon expiration of the initial term, this agreement shall automatically renew for successive one-year terms unless either party provides written notice of non-renewal at least 30 days prior to the end of the then-current term.',
-              'All obligations under this agreement shall be binding upon the successors and permitted assigns of the parties.'
-            ],
-            terminationClause: 'Either party may terminate with 15 days written notice.',
-            disputeResolution: 'Arbitration and Conciliation Act, 1996',
-            confidentialityPeriod: 'Survives termination of agreement',
-            renewalClause: 'This agreement shall automatically renew for additional one-year periods unless either party notifies the other in writing of its intent not to renew at least 30 days before the end of the current term.'
-          }           
-    }
+        return contractDataStored
+      }
+      
 
-    _handleKeywordBasedResponse(message) {
-        if (message.toLowerCase().includes('hello') || message.toLowerCase().includes('hi')) {
-          return "Hello! Welcome to SpotDraft’s contract assistant. How can I help you with your legal contracts today?";
+      _handleKeywordBasedResponse(message) {
+        const lowerMessage = message.toLowerCase().trim();
+    
+        if (lowerMessage.includes('hello') || lowerMessage.includes('hi')) {
+            return "Hello! Welcome to SpotDraft’s contract assistant. How can I help you with your legal contracts today?";
         } else if (lowerMessage.includes('draft') || lowerMessage.includes('create')) {
-          return 'To draft a new legal contract, please share the contract type and any key details. I’ll guide you through the process.';
+            return 'To draft a new legal contract, please share the contract type and any key details. I’ll guide you through the process.';
         } else if (lowerMessage.includes('review')) {
-          return 'To review a contract, please upload the document or paste the text here. I’ll help you analyze it.';
+            return 'To review a contract, please upload the document or paste the text here. I’ll help you analyze it.';
         } else if (lowerMessage.includes('help')) {
-          return 'Available commands:\n- "draft" or "create" - Start a new contract draft\n- "review" - Get help analyzing a contract\n- "clauses" - View standard clause templates\n- "help" - Show this menu';
+            return 'Available commands:\n- "draft" or "create" - Start a new contract draft\n- "review" - Get help analyzing a contract\n- "clauses" - View standard clause templates\n- "help" - Show this menu';
         } else if (lowerMessage.includes('clauses') || lowerMessage.includes('templates')) {
-          return 'Popular clause templates:\n1. Confidentiality Clause\n2. Termination Clause\n3. Payment Terms\n4. Governing Law\nLet me know if you’d like to insert or modify one.';
+            return 'Popular clause templates:\n1. Confidentiality Clause\n2. Termination Clause\n3. Payment Terms\n4. Governing Law\nLet me know if you’d like to insert or modify one.';
         } else {
             return 'Thanks for your message! Reply with "help" to see what I can do with legal contracts.';
         }
     }
-
+    
 }
 
 module.exports = new WhatsAppService();
