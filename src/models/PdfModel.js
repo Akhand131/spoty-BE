@@ -5,7 +5,7 @@ const { Schema } = mongoose;
 
 const logSchema = new Schema({
     message: { type: String, required: true },
-    createdBy: { type: String, required:true },
+    createdBy: { type: String},
     createdAt: { type: Date, default: Date.now }
 });
 

@@ -57,18 +57,19 @@ class LogController {
   updateLogs = async (req, res) => {
     try {
      
-        const { id,status, cp_id, message } = req.body;
+        const { contractId,status, cp_id, message } = req.body;
 
-        const logs = await LogModel.findById(id);
-        if (!logs) {
-            return res.status(404).json({ message: 'No Logs found' });
-        }
+        // const logs = await LogModel.findOne({ contractId: contractId });
+        // if (!logs) {
+        //     return res.status(404).json({ message: 'No Logs found' });
+        // }
+       let msg=[];
 
         if(message && !cp_id){
             return res.status(401).json({ message: 'Please provide id to add message' });
         }
 
-        const contractId = logs.contractId;
+     
         const contract = await Pdf.findById(contractId);
 
         if (!contract) {
@@ -83,34 +84,67 @@ class LogController {
                 createdBy: cp.name || null,  // Use authenticated user's ID if available
                 createdAt: new Date()
             });
+            msg.push(message)
+            
         }
 
         // Push cp_id to counterparty_signature if valid
         if (cp_id && contract.counterparty_name.includes(cp_id)) {
+            const cp=await CounterpartiesModel.findById(cp_id);
             if (!contract.counterparty_signature.includes(cp_id)) {
                 contract.counterparty_signature.push(cp_id);
+                contract.logs.push({
+                    message:`Signed By ${cp.name}`,
+                    createdBy: cp.name || null,  // Use authenticated user's ID if available
+                    createdAt: new Date()
+                });
+                msg.push(message);
             }
+        }
+
+        let allSigned = true;
+        for (const refId of contract.counterparty_name) {
+                if (!contract.counterparty_signature.includes(refId)) {
+                    allSigned = false;
+                    break;
+                }
+        }
+        if (allSigned&&contract.status!=='Executed') {
+            contract.status = 'Executed';
+            contract.logs.push({
+                message:"Contract Executed",
+                createdBy: '',  // Use authenticated user's ID if available
+                createdAt: new Date()
+            });
+            msg.push("Contract Executed");
+            
+        }
+        else if(status &&contract.status!=='Executed'){
+            contract.status = status;
+            contract.logs.push({
+                message:`Contract's Status is changed to ${status}`,
+                createdBy: '',  // Use authenticated user's ID if available
+                createdAt: new Date()
+            });
+            msg.push(`Contract's Status is changed to ${status}`);
         }
 
         // Update status logic
-        if (status) {
-            if (status === 'Signing' || status === 'Executed') {
-                let allSigned = true;
-                for (const refId of contract.counterparty_signature) {
-                    if (!contract.counterparty_name.includes(refId)) {
-                        allSigned = false;
-                        break;
-                    }
-                }
-                if (allSigned) {
-                    contract.status = 'Executed';
-                }
-            } else {
-                contract.status = status;
-            }
-        }
 
         await contract.save();
+      
+        for(const info of msg){
+            await LogModel.create({
+                createdBy: contract.owner,
+                contractId: contractId,
+                counterpartiesId: cp_id ?? undefined,
+                status: contract.status,
+                organization_entity: contract.organization_entity,
+                contract_type: contract.contract_type,
+                message:info
+            })
+        }
+        
 
         return res.status(200).json({
             message: 'Log updated successfully',
